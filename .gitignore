@@ -1,0 +1,7 @@
+build
+third-party
+tests
+build*
+*#*
+*~*
+*.pyc
