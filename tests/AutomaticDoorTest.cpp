@@ -5,7 +5,11 @@
 class OpenDoorEvent : public fsm::Event<OpenDoorEvent> {};
 class CloseDoorEvent : public fsm::Event<CloseDoorEvent> {};
 class LockDoorEvent : public fsm::Event<LockDoorEvent> {};
-class UnlockDoorEvent : public fsm::Event<UnlockDoorEvent> {};
+class UnlockDoorEvent : public fsm::Event<UnlockDoorEvent> {
+public:
+	UnlockDoorEvent(const std::string& k) : key(k) {}
+	std::string key;
+};
 
 class DoorClosedState;
 class DoorOpenState;
@@ -27,15 +31,26 @@ public:
 
 class DoorLockedState : public fsm::State<DoorLockedState> {
 public:
+
+	DoorLockedState(const std::string& key) : _key(key) {}
+	
 	void react(const OpenDoorEvent&) {
 		std::cout << "Can't open. Door is locked" << std::endl;
 	};
 
-	void react(const UnlockDoorEvent&) {
-		transit<DoorClosedState>();		
-		std::cout << "Door is unlocked" << std::endl;
-	};
+	void react(const UnlockDoorEvent& event) {
 
+		if (event.key == _key) {		
+			transit<DoorClosedState>();
+			std::cout << "Door is unlocked" << std::endl;
+		}
+		else {
+			std::cout << "Key does not fit the lock" << std::endl;
+		}
+	};
+	
+protected:
+	std::string _key;
 };
 
 class DoorOpenState : public fsm::State<DoorOpenState> {
@@ -53,7 +68,7 @@ public:
 		// define graph states
 		_fsm.addState<DoorClosedState>();
 		_fsm.addState<DoorOpenState>();
-		_fsm.addState<DoorLockedState>();
+		_fsm.addState<DoorLockedState>("correct_key");
 
 		// initial state
 		_fsm.setCurrentState<DoorClosedState>();
@@ -78,8 +93,8 @@ public:
 		_fsm.dispatch(LockDoorEvent());
 	}
 
-	void unlock() {
-		_fsm.dispatch(UnlockDoorEvent());
+	void unlock(const std::string& key) {
+		_fsm.dispatch(UnlockDoorEvent(key));
 	}
 	
 
@@ -94,6 +109,7 @@ int main() {
 	door.close();
 	door.lock();
 	door.open();
-	door.unlock();
+	door.unlock("wrong_key");
+	door.unlock("correct_key");
 	door.open();	
 }
