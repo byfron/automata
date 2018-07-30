@@ -2,6 +2,9 @@
 #include <memory>
 #include <map>
 #include <functional>
+#include <unordered_map>
+#include <vector>
+#include <assert.h>
 
 namespace fsm {
 
@@ -57,7 +60,7 @@ public:
 };	
 
 template <typename Dummy>	
-class BaseFSMState_Statics {
+class BaseState_Statics {
 	
 public:
 	typedef uint32_t Index;
@@ -65,13 +68,13 @@ public:
 };
 
 template< class Dummy >
-typename BaseFSMState_Statics<Dummy>::Index BaseFSMState_Statics<Dummy>::state_index_counter = 0;	
+typename BaseState_Statics<Dummy>::Index BaseState_Statics<Dummy>::state_index_counter = 0;	
 	
-class BaseFSMState : public BaseFSMState_Statics<void> {
+class BaseState : public BaseState_Statics<void> {
 public:
 
 	template <typename S>
-	void transit();	
+	void transit();
 	FSM* fsm;
 };
 	
@@ -92,7 +95,7 @@ private:
 		
 public:
 	
-	using state_ptr_t = std::shared_ptr<BaseFSMState>;
+	using state_ptr_t = std::shared_ptr<BaseState>;
 	template<typename State, typename Event>
 	void subscribe() {
 		State *state_ptr = static_cast<State*>(_state_map[State::stateIndex()].get());		
@@ -129,7 +132,7 @@ public:
 	}
 
 	state_ptr_t getCurrentState() {
-		assert(_state_map.count(S::stateIndex()));
+		assert(_state_map.count(current_state_idx));
 		return _state_map[current_state_idx];
 	}
 	
@@ -142,12 +145,12 @@ protected:
 };
 
 template <typename S>
-void BaseFSMState::transit() {
+void BaseState::transit() {
 	fsm->transit<S>();
 }
 
 template<typename T>
-class FSMState : public BaseFSMState {
+class State : public BaseState {
 public:
 	static Index stateIndex() {
 		static Index state_index = state_index_counter++;

@@ -1,0 +1,1 @@
+add_executable(automatic_door_test AutomaticDoorTest.cpp)
